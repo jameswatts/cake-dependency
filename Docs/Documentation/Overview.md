@@ -1,27 +1,21 @@
-Cake Dependency
-===============
+Overview
+========
 
 The **Dependency** plugin for *CakePHP* provides a dependency injection container and service registry/locator. The plugin includes the [Di](Utility/Di.php) utility class, which is used to register and resolve dependencies.
 
 To inject dependencies you only need a class which is accessible to the framework. This can be from *CakePHP* itself, from a plugin, or even a vendor library.
 
-To get working quickly check out the [Quick Start](Docs/Tutorials/Quick-Start.md) tutorial from the [documentation](Docs/Home.md).
+License
+-------
 
-Requirements
-------------
+Copyright 2013 James Watts (CakeDC). All rights reserved.
 
-* CakePHP 2+
-* PHP 5.3+
-
-Documentation
--------------
-
-Full documentation is included with the plugin, and can be found in the [Docs](Docs/Home.md) directory of this repository.
+Licensed under the MIT License. Redistributions of the source code included in this repository must retain the copyright notice found in each file.
 
 Support
 -------
 
-For support, bugs and feature requests, please use the [issues](https://github.com/jameswatts/cake-dependency/issues) section of this repository.
+For support, bugs and feature requests, please create a new [issue](https://github.com/jameswatts/cake-dependency/issues).
 
 Contributing
 ------------
@@ -30,7 +24,7 @@ If you'd like to contribute new features, enhancements or bug fixes to the code 
 
 * Create a [GitHub](https://github.com/signup/free) account, if you don't own one already
 * Then, [fork](https://help.github.com/articles/fork-a-repo) the [Cake Dependency](https://github.com/jameswatts/cake-dependency) repository to your account
-* Create a new [branch](https://help.github.com/articles/creating-and-deleting-branches-within-your-repository) from the *develop* branch in your forked repository
+* Create a new [branch](https://help.github.com/articles/creating-and-deleting-branches-within-your-repository) from the *master* branch in your forked repository
 * Modify the existing code, or add new code to your branch, making sure you follow the [CakePHP Coding Standards](http://book.cakephp.org/2.0/en/contributing/cakephp-coding-conventions.html)
 * Modify or add [unit tests](http://book.cakephp.org/2.0/en/development/testing.html) which confirm the correct functionality of your code (requires [PHPUnit](http://www.phpunit.de/manual/current/en/installation.html) 3.5+)
 * Consider using the [CakePHP Code Sniffer](https://github.com/cakephp/cakephp-codesniffer) to check the quality of your code
@@ -39,11 +33,4 @@ If you'd like to contribute new features, enhancements or bug fixes to the code 
 There may be some discussion regarding your contribution to the repository before any code is merged in, so be prepared to provide feedback on your contribution if required.
 
 A list of contributors to the **Cake Dependency** plugin can be found [here](https://github.com/jameswatts/cake-dependency/contributors).
-
-Licence
--------
-
-Copyright 2013 James Watts (CakeDC). All rights reserved.
-
-Licensed under the MIT License. Redistributions of the source code included in this repository must retain the copyright notice found in each file.
 
