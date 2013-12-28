@@ -16,7 +16,7 @@ Documentation
 * [Installation](Documentation/Installation.md)
 * [Examples](Documentation/Examples.md)
 * [Service Locator](Documentation/Service-Locator.md)
-* [Dependency Injection](Documentation/Sependency-Injection.md)
+* [Dependency Injection](Documentation/Dependency-Injection.md)
 * [Observers](Documentation/Observers.md)
 
 Tutorials
