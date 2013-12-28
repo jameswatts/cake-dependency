@@ -42,14 +42,14 @@ class Book {
 
 	protected $_Library = null;
 
-	public $esbn = '1613823312';
+	public $isbn = '1613823312';
 
 	public function __construct(Library $library) {
 		$this->_Library = $library;
 	}
 
 	public function getTitle() {
-		$this->_Library->find($this->esbn);
+		$this->_Library->find($this->isbn);
 	}
 
 }
@@ -89,14 +89,14 @@ class Book {
 
 	protected $_Library = null;
 
-	public $esbn = '1613823312';
+	public $isbn = '1613823312';
 
 	public function setLibrary(Library $library) {
 		$this->_Library = $library;
 	}
 
 	public function getTitle() {
-		$this->_Library->find($this->esbn);
+		$this->_Library->find($this->isbn);
 	}
 
 }
