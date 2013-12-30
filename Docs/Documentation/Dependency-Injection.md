@@ -3,7 +3,7 @@ Dependency Injection
 
 Using dependency injection allows you to specify dependencies separate from the instantiation logic, favoring composition from a configuration external to the class's hierarchy.
 
-As a more elborate example, here we have a class which relies upon another dependency. For this, we'll create a class which will serve as the look-up for the book's "title" based upon it's ISBN number.
+As a more elaborate example, here we have a class which relies upon another dependency. For this, we'll create a class which will serve as the look-up for the book's "title" based upon it's ISBN number.
 
 ```php
 class Library {

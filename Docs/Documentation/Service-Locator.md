@@ -36,7 +36,7 @@ The configuration options available for the array are the following:
 * **implement:** Requires that the service class implement any of the interfaces defined in the array of class names.
 * **extend:** Requires that the service class extend any of the classes defined in the array of class names.
 * **params:** The **constructor** parameters for the instantiation of the dependency as a key => value array. The keys are the reflected names of the **constructor** arguments. Use ```Di::load()``` to lazy load dependencies as the value of an argument.
-* **setters:** The **setters** to call after creating an instance as a key => value array. The key is the method name, while the value is a key => value array of reflected paramters, the same as with the "params" option.
+* **setters:** The **setters** to call after creating an instance as a key => value array. The key is the method name, while the value is a key => value array of reflected parameters, the same as with the "params" option.
 * **scope:** The scope to store the dependency under, otherwise the current scope is used. You can change the current scope at any time with ```Di::scope('something')```. If the ```Di::GLOBAL_SCOPE``` is used the dependency will always resolve irrespective of the current scope.
 * **fresh:** Setting this to *true* will force the dependency to always create a new instance. However, this will only take effect in dependency chains if the option is set along the chain, or, if the dependency is injected via a **setter**.
 

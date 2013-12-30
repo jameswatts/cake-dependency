@@ -1,7 +1,7 @@
 Installation
 ============
 
-To install the plugin, place the files in a directory labelled "Dependency/" in your "app/Plugin/" directory.
+To install the plugin, place the files in a directory labeled "Dependency/" in your "app/Plugin/" directory.
 
 If you'd like to define your dependencies in a separate file the plugin looks for a file named ```dependency.php``` in the ```app/Config``` directory. However, to enable the plugin to search for this file be sure to set the "bootstrap" option to *true* when setting up your plugin. See the [Quick Start](../Tutorials/Quick-Start.md) guide for more help.
 
@@ -22,7 +22,7 @@ To initialize the submodule(s) run the following command:
 git submodule update --init --recursive
 ```
 
-To retreive the latest updates to the plugin, assuming you're using the "master" branch, go to "app/Plugin/Dependency" and run the following command:
+To retrieve the latest updates to the plugin, assuming you're using the "master" branch, go to "app/Plugin/Dependency" and run the following command:
 
 ```
 git pull origin master

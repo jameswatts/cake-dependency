@@ -147,7 +147,7 @@ Load a dependency on the fly.
 $example = Di::Example();
 ```
 
-You can also explicity get the dependency from the container.
+You can also explicitly get the dependency from the container.
 
 ```php
 $example = Di::get('Example');
@@ -202,6 +202,10 @@ Dependencies will now be searched for under that scope. The default scope is ```
 
 You can also register a dependency in the ```Di::GLOBAL_SCOPE```, which will make it always available, irrespective of the current scope. To get the current scope you can call ```Di::scope()``` without an argument.
 
+```php
+$scope = Di::scope();
+```
+
 You can also specify a scope when loading a dependency. This will not modify the scope globally, only for the service requested.
 
 ```php
@@ -210,7 +214,7 @@ $example = Di::Example(array(
 ));
 ```
 
-If a dependecy is requested from a scope where it does not exist an exception is thrown.
+If a dependency is requested from a scope where it does not exist an exception is thrown.
 
 Registering an Observer
 -----------------------

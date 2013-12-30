@@ -13,7 +13,7 @@ The plugin doesn't have any other additional requirements or dependencies.
 Installation
 ------------
 
-To install the plugin, place the files in a directory labelled "Dependency/" in your "app/Plugin/" directory.
+To install the plugin, place the files in a directory labeled "Dependency/" in your "app/Plugin/" directory.
 
 If you're using **git** for version control, you may want to add the **Dependency** plugin as a submodule on your repository. To do so, run the following command from the base of your repository:
 
@@ -29,7 +29,7 @@ To initialize the submodule(s) run the following command:
 git submodule update --init --recursive
 ```
 
-To retreive the latest updates to the plugin, assuming you're using the "master" branch, go to "app/Plugin/Dependency" and run the following command:
+To retrieve the latest updates to the plugin, assuming you're using the "master" branch, go to "app/Plugin/Dependency" and run the following command:
 
 ```
 git pull origin master

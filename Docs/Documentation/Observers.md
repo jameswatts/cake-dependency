@@ -13,7 +13,7 @@ Di::observe('MyClass' array(
 
 The previous observer would define the param "example" for any service of which it's instance which uses, implements or extends ```MyClass```.
 
-You can also observe mutiple interfaces and classes at once, which would apply the changes for any match.
+You can also observe multiple interfaces and classes at once, which would apply the changes for any match.
 
 ```php
 Di::observe(array(
