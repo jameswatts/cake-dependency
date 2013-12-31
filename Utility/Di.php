@@ -61,6 +61,13 @@ abstract class Di extends Object {
 	protected static $_scope = self::DEFAULT_SCOPE;
 
 /**
+ * The locked scopes.
+ *
+ * @var array
+ */
+	protected static $_lock = array();
+
+/**
  * The central registry for dependencies.
  *
  * @var array
@@ -128,7 +135,11 @@ abstract class Di extends Object {
  * every request.
  */
 	public static function add($name, array $options = array()) {
-		self::$_registry[(isset($options['scope']))? $options['scope'] : self::$_scope][$name] = $options;
+		$scope = (isset($options['scope']))? $options['scope'] : self::$_scope;
+		if (isset(self::$_lock[$scope])) {
+			throw new CakeException(sprintf('Cannot register dependency "%s", scope locked: %s', $name, $scope));
+		}
+		self::$_registry[$scope][$name] = $options;
 	}
 
 /**
@@ -232,6 +243,28 @@ abstract class Di extends Object {
 	}
 
 /**
+ * Locks the container for a certain scope.
+ *
+ * @static
+ * @param string $scope The optional dependency scope, defaults to DEFAULT_SCOPE.
+ * @return void
+ */
+	public static function lock($scope = self::DEFAULT_SCOPE) {
+		self::$_lock[$scope] = true;
+	}
+
+/**
+ * Unlocks the container for a certain scope.
+ *
+ * @static
+ * @param string $scope The optional dependency scope, defaults to DEFAULT_SCOPE.
+ * @return void
+ */
+	public static function unlock($scope = self::DEFAULT_SCOPE) {
+		unset(self::$_lock[$scope]);
+	}
+
+/**
  * Applies the options for the observed classes.
  *
  * @static
@@ -286,10 +319,10 @@ abstract class Di extends Object {
 			} else {
 				$data = array_replace_recursive(self::$_registry[$scope][$name], $options);
 				if (!isset($data['className'])) {
-					throw new CakeException('Dependency "%s" missing option: className', $name);
+					throw new CakeException(sprintf('Dependency "%s" missing option: className', $name));
 				}
 				if (!isset($data['classPath'])) {
-					throw new CakeException('Dependency "%s" missing option: classPath', $name);
+					throw new CakeException(sprintf('Dependency "%s" missing option: classPath', $name));
 				}
 				App::uses($data['className'], $data['classPath']);
 				self::$_container[$scope][$name] = array(
@@ -299,7 +332,7 @@ abstract class Di extends Object {
 				);
 			}
 		} else {
-			throw new CakeException('Dependency not found: ' . $name);
+			throw new CakeException(sprintf('Dependency not found: %s', $name));
 		}
 	}
 
@@ -324,7 +357,7 @@ abstract class Di extends Object {
 			case self::TYPE_CONFIG:
 				return self::_resolveConfig($container, $scope, $name, $data, $options);
 			default:
-				throw new CakeException('Unknown dependency type: ' . $type);
+				throw new CakeException(sprintf('Unknown dependency type: %s', $type));
 		}
 	}
 
@@ -375,7 +408,7 @@ abstract class Di extends Object {
 	protected static function _resolveConfig($container, $scope, $name, $data, $options) {
 		$class = $data['className'];
 		if (!class_exists($data['className'])) {
-			throw new CakeException('Dependency class is not defined: ' . $data['className']);
+			throw new CakeException(sprintf('Dependency class is not defined: %s', $data['className']));
 		}
 		$interfaces = class_implements($class);
 		$parents = class_parents($class);
@@ -437,10 +470,10 @@ abstract class Di extends Object {
 	protected static function _implements($name, $required, array $interfaces = array()) {
 		if (is_array($required)) {
 			if (count(array_merge($required, $interfaces)) === (count($required)+count($interfaces))) {
-				throw new CakeException('Dependency "%s" does not implement a required interface: %s', $name, implode(', ', $interfaces));
+				throw new CakeException(sprintf('Dependency "%s" does not implement a required interface: %s', $name, implode(', ', $interfaces)));
 			}
 		} else if (!in_array($required, $interfaces)) {
-			throw new CakeException('Dependency "%s" does not implement a required interface: %s', $name, $required);
+			throw new CakeException(sprintf('Dependency "%s" does not implement a required interface: %s', $name, $required));
 		}
 	}
 
@@ -456,10 +489,10 @@ abstract class Di extends Object {
 	protected static function _extends($name, $required, array $classes = array()) {
 		if (is_array($required)) {
 			if (count(array_merge($required, $classes)) === (count($required)+count($classes))) {
-				throw new CakeException('Dependency does not extend a required class: ' . implode(', ', $classes));
+				throw new CakeException(sprintf('Dependency does not extend a required class: %s', implode(', ', $classes)));
 			}
 		} else if (!in_array($required, $classes)) {
-			throw new CakeException('Dependency "%s" does not extend a required class: %s', $name, $required);
+			throw new CakeException(sprintf('Dependency "%s" does not extend a required class: %s', $name, $required));
 		}
 	}
 
