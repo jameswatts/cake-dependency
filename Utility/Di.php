@@ -133,6 +133,7 @@ abstract class Di extends Object {
  * valid callable, or an array of options. If an object, this will be assumed 
  * as the dependency. Both closures and callables will always be evaluated upon 
  * every request.
+ * @throws CakeException if the scope is currently locked.
  */
 	public static function add($name, array $options = array()) {
 		$scope = (isset($options['scope']))? $options['scope'] : self::$_scope;
@@ -148,10 +149,14 @@ abstract class Di extends Object {
  * @static
  * @param string $name The name of the dependency.
  * @param array $options The dependency options.
+ * @throws CakeException if the scope is currently locked.
  */
 	public static function set($name, array $options = array()) {
 		$current = null;
 		$scope = (isset($options['scope']))? $options['scope'] : self::$_scope;
+		if (isset(self::$_lock[$scope])) {
+			throw new CakeException(sprintf('Cannot register dependency "%s", scope locked: %s', $name, $scope));
+		}
 		if (isset(self::$_registry[$scope][$name])) {
 			$current = self::$_registry[$scope][$name];
 		}
@@ -296,6 +301,7 @@ abstract class Di extends Object {
  * @static
  * @param string $name The name of the dependency.
  * @param array $arguments The dependency options.
+ * @throws CakeException if "className" or "classPath" are missing, or if the dependency has not been defined.
  * @return void
  */
 	protected static function _create($name, array $options = array()) {
@@ -346,6 +352,7 @@ abstract class Di extends Object {
  * @param string $name The name of the dependency.
  * @param array $data The dependency options.
  * @param array $options The runtime options passed.
+ * @throws CakeException if an unknown dependency type is specified.
  * @return mixed
  */
 	protected static function _resolve($type, $container, $scope, $name, $data, $options) {
@@ -403,6 +410,7 @@ abstract class Di extends Object {
  * @param string $name The name of the dependency.
  * @param array $data The dependency options.
  * @param array $options The runtime options passed.
+ * @throws CakeException if the class for the dependency does not exist.
  * @return mixed
  */
 	protected static function _resolveConfig($container, $scope, $name, $data, $options) {
@@ -465,6 +473,7 @@ abstract class Di extends Object {
  * @param string $name The name of the dependency.
  * @param mixed $required The required interface as a string, or an array of strings.
  * @param array $interfaces The interfaces the dependency implements.
+ * @throws CakeException if the dependency doesn't implement a required interface.
  * @return void
  */
 	protected static function _implements($name, $required, array $interfaces = array()) {
@@ -484,6 +493,7 @@ abstract class Di extends Object {
  * @param string $name The name of the dependency.
  * @param mixed $required The required class as a string, or an array of strings.
  * @param array $classes The classes the dependency extends.
+ * @throws CakeException if the dependency doesn't extend a required class.
  * @return void
  */
 	protected static function _extends($name, $required, array $classes = array()) {
