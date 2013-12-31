@@ -177,103 +177,12 @@ abstract class Di extends Object {
  * @return mixed
  */
 	public static function get($name, array $options = array()) {
-		$scope = self::$_scope;
-		if (isset($options['scope'])) {
-			$scope = $options['scope'];
-		}
+		$scope = (isset($options['scope']))? $options['scope'] : self::$_scope;
 		if (!array_key_exists($name, self::$_container[$scope]) && !array_key_exists($name, self::$_container[self::GLOBAL_SCOPE])) {
 			self::_create($name, $options);
 		}
-		if ($scope === self::GLOBAL_SCOPE) {
-			$container = self::$_container[$scope];
-		} else {
-			$container = array_replace_recursive(self::$_container[self::GLOBAL_SCOPE], self::$_container[$scope]);
-		}
-		$data = $container[$name]['data'];
-		switch ($container[$name]['type']) {
-			case self::TYPE_OBJECT:
-				if ($data instanceof Closure) {
-					return (self::$_container[$scope][$name]['instance'] = $data(array_merge($data, $options)));
-				}
-				return (self::$_container[$scope][$name]['instance'] = $data);
-			case self::TYPE_CALLBACK:
-				return (self::$_container[$scope][$name]['instance'] = call_user_func_array($data, array(array_merge($data, $options))));
-			default:
-				$class = $data['className'];
-				if (!class_exists($data['className'])) {
-					throw new CakeException('Dependency class is not defined: ' . $data['className']);
-				}
-				$interfaces = class_implements($class);
-				$parents = class_parents($class);
-				$data = array_replace_recursive($data, self::_observers(array_merge(array($class), $interfaces, $parents), $scope));
-				if (!$container[$name]['instance'] || (isset($options['params']) && is_array($options['params'])) || (isset($data['fresh']) && $data['fresh'])) {
-					if (isset($data['implement'])) {
-						if (is_array($data['implement'])) {
-							if (count(array_merge($data['implement'], $interfaces)) === (count($data['implement'])+count($interfaces))) {
-								throw new CakeException('Dependency "%s" does not implement a required interface: %s', $name, implode(', ', $interfaces));
-							}
-						} else if (!in_array($data['implement'], $interfaces)) {
-							throw new CakeException('Dependency "%s" does not implement a required interface: %s', $name, $data['implement']);
-						}
-					}
-					if (isset($data['extend'])) {
-						if (is_array($data['extend'])) {
-							if (count(array_merge($data['extend'], $parents)) === (count($data['extend'])+count($parents))) {
-								throw new CakeException('Dependency does not extend a required class: ' . implode(', ', $parents));
-							}
-						} else if (!in_array($data['extend'], $parents)) {
-							throw new CakeException('Dependency "%s" does not extend a required class: %s', $name, $data['extend']);
-						}
-					}
-					if ((isset($data['params']) && is_array($data['params'])) || (isset($options['params']) && is_array($options['params']))) {
-						$reflection = new ReflectionMethod($class, '__construct');
-						$arguments = array();
-						foreach ($reflection->getParameters() as $param) {
-							$paramName = $param->getName();
-							if (isset($options['params'][$paramName])) {
-								$arguments[] = $options['params'][$paramName];
-							} else if (isset($data['params'][$paramName])) {
-								if (is_object($data['params'][$paramName]) && $data['params'][$paramName] instanceof Closure) {
-									$arguments[] = $data['params'][$paramName]();
-								} else {
-									$arguments[] = $data['params'][$paramName];
-								}
-							} else if ($param->isOptional()) {
-								$arguments[] = $param->getDefaultValue();
-							} else {
-								$arguments[] = null;
-							}
-						}
-						$reflection = new ReflectionClass($class);
-						self::$_container[$scope][$name]['instance'] = $reflection->newInstanceArgs($arguments);
-					} else {
-						self::$_container[$scope][$name]['instance'] = new $class();
-					}
-				}
-				if ((isset($data['setters']) && is_array($data['setters'])) || (isset($options['setters']) && is_array($options['setters']))) {
-					$setters = array_replace_recursive((isset($data['setters']))? $data['setters'] : array(), (isset($options['setters']))? $options['setters'] : array());
-					foreach ($setters as $setter => $params) {
-						$reflection = new ReflectionMethod(self::$_container[$scope][$name]['instance'], $setter);
-						$arguments = array();
-						foreach ($reflection->getParameters() as $param) {
-							$paramName = $param->getName();
-							if (isset($params[$paramName])) {
-								if (is_object($params[$paramName]) && $params[$paramName] instanceof Closure) {
-									$arguments[] = $params[$paramName]();
-								} else {
-									$arguments[] = $params[$paramName];
-								}
-							} else if ($param->isOptional()) {
-								$arguments[] = $param->getDefaultValue();
-							} else {
-								$arguments[] = null;
-							}
-						}
-						$reflection->invokeArgs(self::$_container[$scope][$name]['instance'], $arguments);
-					}
-				}
-				return self::$_container[$scope][$name]['instance'];
-		}
+		$container = ($scope === self::GLOBAL_SCOPE)? self::$_container[$scope] : array_replace_recursive(self::$_container[self::GLOBAL_SCOPE], self::$_container[$scope]);
+		return self::_resolve($container[$name]['type'], $container, $scope, $name, $container[$name]['data'], $options);
 	}
 
 /**
@@ -323,7 +232,7 @@ abstract class Di extends Object {
 	}
 
 /**
- * applies the options for the observed classes.
+ * Applies the options for the observed classes.
  *
  * @static
  * @param array $classes The classes to observe.
@@ -391,6 +300,166 @@ abstract class Di extends Object {
 			}
 		} else {
 			throw new CakeException('Dependency not found: ' . $name);
+		}
+	}
+
+/**
+ * Resolves a dependency at runtime.
+ *
+ * @static
+ * @param integer $type The dependency type.
+ * @param array $container The dependency container.
+ * @param string $scope The dependency scope.
+ * @param string $name The name of the dependency.
+ * @param array $data The dependency options.
+ * @param array $options The runtime options passed.
+ * @return mixed
+ */
+	protected static function _resolve($type, $container, $scope, $name, $data, $options) {
+		switch ($type) {
+			case self::TYPE_OBJECT:
+				return self::_resolveObject($container, $scope, $name, $data, $options);
+			case self::TYPE_CALLBACK:
+				return self::_resolveCallback($container, $scope, $name, $data, $options);
+			case self::TYPE_CONFIG:
+				return self::_resolveConfig($container, $scope, $name, $data, $options);
+			default:
+				throw new CakeException('Unknown dependency type: ' . $type);
+		}
+	}
+
+/**
+ * Resolves the dependency as an object.
+ *
+ * @static
+ * @param array $container The dependency container.
+ * @param string $scope The dependency scope.
+ * @param string $name The name of the dependency.
+ * @param array $data The dependency options.
+ * @param array $options The runtime options passed.
+ * @return mixed
+ */
+	protected static function _resolveObject($container, $scope, $name, $data, $options) {
+		if ($data instanceof Closure) {
+			return (self::$_container[$scope][$name]['instance'] = $data(array_merge($data, $options)));
+		}
+		return (self::$_container[$scope][$name]['instance'] = $data);
+	}
+
+/**
+ * Resolves the dependency as a callback.
+ *
+ * @static
+ * @param array $container The dependency container.
+ * @param string $scope The dependency scope.
+ * @param string $name The name of the dependency.
+ * @param array $data The dependency options.
+ * @param array $options The runtime options passed.
+ * @return mixed
+ */
+	protected static function _resolveCallback($container, $scope, $name, $data, $options) {
+		return (self::$_container[$scope][$name]['instance'] = call_user_func_array($data, array(array_merge($data, $options))));
+	}
+
+/**
+ * Resolves the dependency as a configuration.
+ *
+ * @static
+ * @param array $container The dependency container.
+ * @param string $scope The dependency scope.
+ * @param string $name The name of the dependency.
+ * @param array $data The dependency options.
+ * @param array $options The runtime options passed.
+ * @return mixed
+ */
+	protected static function _resolveConfig($container, $scope, $name, $data, $options) {
+		$class = $data['className'];
+		if (!class_exists($data['className'])) {
+			throw new CakeException('Dependency class is not defined: ' . $data['className']);
+		}
+		$interfaces = class_implements($class);
+		$parents = class_parents($class);
+		$data = array_replace_recursive($data, self::_observers(array_merge(array($class), $interfaces, $parents), $scope));
+		if (!$container[$name]['instance'] || (isset($options['params']) && is_array($options['params'])) || (isset($data['fresh']) && $data['fresh'])) {
+			if (isset($data['implement'])) {
+				self::_implements($name, $data['implement'], $interfaces);
+			}
+			if (isset($data['extend'])) {
+				self::_extends($name, $data['extend'], $parents);
+			}
+			if ((isset($data['params']) && is_array($data['params'])) || (isset($options['params']) && is_array($options['params']))) {
+				$reflection = new ReflectionMethod($class, '__construct');
+				$arguments = array();
+				foreach ($reflection->getParameters() as $param) {
+					$paramName = $param->getName();
+					if (isset($options['params'][$paramName])) {
+						$arguments[] = $options['params'][$paramName];
+					} else if (isset($data['params'][$paramName])) {
+						$arguments[] = (is_object($data['params'][$paramName]) && $data['params'][$paramName] instanceof Closure)? $data['params'][$paramName]() : $data['params'][$paramName];
+					} else {
+						$arguments[] = ($param->isOptional())? $param->getDefaultValue() : null;
+					}
+				}
+				$reflection = new ReflectionClass($class);
+				self::$_container[$scope][$name]['instance'] = $reflection->newInstanceArgs($arguments);
+			} else {
+				self::$_container[$scope][$name]['instance'] = new $class();
+			}
+		}
+		if ((isset($data['setters']) && is_array($data['setters'])) || (isset($options['setters']) && is_array($options['setters']))) {
+			$setters = array_replace_recursive((isset($data['setters']))? $data['setters'] : array(), (isset($options['setters']))? $options['setters'] : array());
+			foreach ($setters as $setter => $params) {
+				$reflection = new ReflectionMethod(self::$_container[$scope][$name]['instance'], $setter);
+				$arguments = array();
+				foreach ($reflection->getParameters() as $param) {
+					$paramName = $param->getName();
+					if (isset($params[$paramName])) {
+						$arguments[] = (is_object($params[$paramName]) && $params[$paramName] instanceof Closure)? $params[$paramName]() : $params[$paramName];
+					} else {
+						$arguments[] = ($param->isOptional())? $param->getDefaultValue() : null;
+					}
+				}
+				$reflection->invokeArgs(self::$_container[$scope][$name]['instance'], $arguments);
+			}
+		}
+		return self::$_container[$scope][$name]['instance'];
+	}
+
+/**
+ * Checks that the dependency implements a required interface.
+ *
+ * @static
+ * @param string $name The name of the dependency.
+ * @param mixed $required The required interface as a string, or an array of strings.
+ * @param array $interfaces The interfaces the dependency implements.
+ * @return void
+ */
+	protected static function _implements($name, $required, array $interfaces = array()) {
+		if (is_array($required)) {
+			if (count(array_merge($required, $interfaces)) === (count($required)+count($interfaces))) {
+				throw new CakeException('Dependency "%s" does not implement a required interface: %s', $name, implode(', ', $interfaces));
+			}
+		} else if (!in_array($required, $interfaces)) {
+			throw new CakeException('Dependency "%s" does not implement a required interface: %s', $name, $required);
+		}
+	}
+
+/**
+ * Checks that the dependency extends a required class.
+ *
+ * @static
+ * @param string $name The name of the dependency.
+ * @param mixed $required The required class as a string, or an array of strings.
+ * @param array $classes The classes the dependency extends.
+ * @return void
+ */
+	protected static function _extends($name, $required, array $classes = array()) {
+		if (is_array($required)) {
+			if (count(array_merge($required, $classes)) === (count($required)+count($classes))) {
+				throw new CakeException('Dependency does not extend a required class: ' . implode(', ', $classes));
+			}
+		} else if (!in_array($required, $classes)) {
+			throw new CakeException('Dependency "%s" does not extend a required class: %s', $name, $required);
 		}
 	}
 
