@@ -98,7 +98,9 @@ abstract class Di extends Object {
 	);
 
 /**
- * Calls a dependency via the facotry interface.
+ * Calls a dependency via the factory interface. Only the first argument is 
+ * accepted as a configuration array, which if passed at runtime upon resolving 
+ * a dependency the original instance will not be modified.
  *
  * @static
  * @param string $name The name of the dependency.
@@ -185,7 +187,9 @@ abstract class Di extends Object {
 	}
 
 /**
- * Resolves a previously registered dependency.
+ * Resolves a previously registered dependency. If configuration options are 
+ * passed at runtime upon resolving a dependency the original instance will not 
+ * be modified.
  *
  * @static
  * @param string $name The name of the dependency.
@@ -230,7 +234,7 @@ abstract class Di extends Object {
 	}
 
 /**
- * Attaches an observer for a specifc class or set of classes.
+ * Attaches an observer for a specif class or set of classes.
  *
  * @static
  * @param mixed $class The class name or array of class names.
@@ -402,7 +406,9 @@ abstract class Di extends Object {
 	}
 
 /**
- * Resolves the dependency as a configuration.
+ * Resolves the dependency as a configuration. If configuration options are 
+ * passed at runtime upon resolving a dependency the original instance will not 
+ * be modified.
  *
  * @static
  * @param array $container The dependency container.
@@ -414,21 +420,30 @@ abstract class Di extends Object {
  * @return mixed
  */
 	protected static function _resolveConfig($container, $scope, $name, $data, $options) {
-		$class = $data['className'];
-		if (!class_exists($data['className'])) {
-			throw new CakeException(sprintf('Dependency class is not defined: %s', $data['className']));
+		if (isset($options['scope'])) {
+			unset($options['scope']);
+		}
+		if (isset($options['className'])) {
+			$class = $options['className'];
+			App::uses($class, ($options['classPath'])? $options['classPath'] : $data['classPath']);
+		} else {
+			$class = $data['className'];
+		}
+		if (!class_exists($class)) {
+			throw new CakeException(sprintf('Dependency class is not defined: %s', $class));
 		}
 		$interfaces = class_implements($class);
 		$parents = class_parents($class);
 		$data = array_replace_recursive($data, self::_observers(array_merge(array($class), $interfaces, $parents), $scope));
-		if (!$container[$name]['instance'] || (isset($options['params']) && is_array($options['params'])) || (isset($data['fresh']) && $data['fresh'])) {
+		$instance = (!count($options))? $container[$name]['instance'] : null;
+		if (!$instance || (isset($data['fresh']) && $data['fresh'])) {
 			if (isset($data['implement'])) {
 				self::_implements($name, $data['implement'], $interfaces);
 			}
 			if (isset($data['extend'])) {
 				self::_extends($name, $data['extend'], $parents);
 			}
-			if ((isset($data['params']) && is_array($data['params'])) || (isset($options['params']) && is_array($options['params']))) {
+			if (isset($data['params']) || isset($options['params'])) {
 				$reflection = new ReflectionMethod($class, '__construct');
 				$arguments = array();
 				foreach ($reflection->getParameters() as $param) {
@@ -442,15 +457,15 @@ abstract class Di extends Object {
 					}
 				}
 				$reflection = new ReflectionClass($class);
-				self::$_container[$scope][$name]['instance'] = $reflection->newInstanceArgs($arguments);
+				$instance = $reflection->newInstanceArgs($arguments);
 			} else {
-				self::$_container[$scope][$name]['instance'] = new $class();
+				$instance = new $class();
 			}
 		}
-		if ((isset($data['setters']) && is_array($data['setters'])) || (isset($options['setters']) && is_array($options['setters']))) {
+		if (isset($data['setters']) || isset($options['setters'])) {
 			$setters = array_replace_recursive((isset($data['setters']))? $data['setters'] : array(), (isset($options['setters']))? $options['setters'] : array());
 			foreach ($setters as $setter => $params) {
-				$reflection = new ReflectionMethod(self::$_container[$scope][$name]['instance'], $setter);
+				$reflection = new ReflectionMethod($instance, $setter);
 				$arguments = array();
 				foreach ($reflection->getParameters() as $param) {
 					$paramName = $param->getName();
@@ -460,10 +475,10 @@ abstract class Di extends Object {
 						$arguments[] = ($param->isOptional())? $param->getDefaultValue() : null;
 					}
 				}
-				$reflection->invokeArgs(self::$_container[$scope][$name]['instance'], $arguments);
+				$reflection->invokeArgs($instance, $arguments);
 			}
 		}
-		return self::$_container[$scope][$name]['instance'];
+		return (count($options) > 0)? $instance : (self::$_container[$scope][$name]['instance'] = $instance);
 	}
 
 /**
