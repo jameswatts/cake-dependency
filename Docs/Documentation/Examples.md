@@ -177,6 +177,8 @@ $example = Di::Example(array(
 ));
 ```
 
+**IMPORTANT:** Configuration changes at runtime do not modify the stored instance if one exists.
+
 Configuration options can also be modified previous to instantiation using ```Di::set()```.
 
 ```php

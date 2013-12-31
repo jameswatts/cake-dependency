@@ -40,6 +40,8 @@ The configuration options available for the array are the following:
 * **scope:** The scope to store the dependency under, otherwise the current scope is used. You can change the current scope at any time with ```Di::scope('something')```. If the ```Di::GLOBAL_SCOPE``` is used the dependency will always resolve irrespective of the current scope.
 * **fresh:** Setting this to *true* will force the dependency to always create a new instance. However, this will only take effect in dependency chains if the option is set along the chain, or, if the dependency is injected via a **setter**.
 
+Configuration options can also be passed to the dependency factory or ```Di::get()``` at runtime when resolving an instance. However, it's important to note that, when overriding the configuration options, the stored instance (if one exists) is *not* modified. It's assumed that, if you're making configuration changes at runtime, you're expecting a new instance. To override the configuration options on dependencies which have already been registered use ```Di::set()```.
+
 Resolving Services
 ------------------
 
@@ -64,7 +66,19 @@ Service Scope
 
 Service scopes allow you to set contextual boundaries for dependencies. This allows the same service to have multiple setups, or for a collection of related dependencies to exist under a common scope.
 
+```php
+Di::scope('products');
+```
+
 When the service locator looks-up the service named "JungleBook", it searches under the current scope. If the scope hasn't been changed or set, it's the default scope, which is ```Di::DEFAULT_SCOPE```.
 
-Services can also be registered globally, and therefore are available from any scope. To make a service global simply set the current scope to ```Di::GLOBAL_SCOPE``` before configuring the dependency, or use the "scope" option to explicitly make it global.
+Services can also be registered globally, and therefore are available from any scope. To make a service global simply set the current scope to ```Di::GLOBAL_SCOPE``` before configuring the dependency, or use the "scope" option to explicitly make it global. To read the current scope call ```Di::scope()``` without an argument.
+
+Additionally, there exists the option to *lock* and *unlock* scopes against new dependencies being registered.
+
+```php
+Di::lock('products');
+```
+
+This would lock the "products" scope for the registry of new services, throwing an exception if an attempt is made. To unlock the scope you would simply call ```Di::unlock("products")```.
 
