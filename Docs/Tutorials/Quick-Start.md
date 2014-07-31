@@ -47,7 +47,7 @@ Configuration
 The plugin requires the bootstrap to load in order to store dependency configurations in the ```app/Config/dependency.php``` file. If you haven't already, add the following line to your bootstrap file:
 
 ```
-CakePlugin::loadPlugin('Dependency', array(
+CakePlugin::load('Dependency', array(
 	'bootstrap' => true
 ));
 ```
