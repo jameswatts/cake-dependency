@@ -21,7 +21,7 @@ class Book {
 To register the previous class as a dependency you would call the ```Di::add()``` method, with the *name* and *options*, for example:
 
 ```php
-Di::add('JungleBook' array(
+Di::add('JungleBook', array(
 	'className' => 'Book',
 	'classPath' => 'Lib'
 ));
