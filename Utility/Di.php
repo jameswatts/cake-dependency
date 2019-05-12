@@ -150,19 +150,19 @@ abstract class Di extends Object {
  *
  * @static
  * @param string $name The name of the dependency.
- * @param array $options The dependency options.
+ * @param mixed $options The dependency options.
  * @throws CakeException if the scope is currently locked.
  */
-	public static function set($name, array $options = array()) {
+	public static function set($name, $options = array()) {
 		$current = null;
-		$scope = (isset($options['scope']))? $options['scope'] : self::$_scope;
+		$scope = (is_array($options) && isset($options['scope']))? $options['scope'] : self::$_scope;
 		if (isset(self::$_lock[$scope])) {
 			throw new CakeException(sprintf('Cannot register dependency "%s", scope locked: %s', $name, $scope));
 		}
 		if (isset(self::$_registry[$scope][$name])) {
 			$current = self::$_registry[$scope][$name];
 		}
-		self::$_registry[$scope][$name] = (is_array($current))? array_replace_recursive($current, $options) : $options;
+		self::$_registry[$scope][$name] = (is_array($current) && is_array($options)) ? array_replace_recursive($current, $options) : $options;
 	}
 
 /**
