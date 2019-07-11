@@ -137,8 +137,8 @@ abstract class Di extends Object {
  * every request.
  * @throws CakeException if the scope is currently locked.
  */
-	public static function add($name, array $options = array()) {
-		$scope = (isset($options['scope']))? $options['scope'] : self::$_scope;
+	public static function add($name, $options) {
+		$scope = (is_array($options) && isset($options['scope']))? $options['scope'] : self::$_scope;
 		if (isset(self::$_lock[$scope])) {
 			throw new CakeException(sprintf('Cannot register dependency "%s", scope locked: %s', $name, $scope));
 		}
@@ -229,7 +229,7 @@ abstract class Di extends Object {
  */
 	public static function clear($name, $scope = self::DEFAULT_SCOPE) {
 		if (isset(self::$_container[$scope][$name])) {
-			self::$_container[$scope][$name]['instance'] = null;
+			unset(self::$_container[$scope][$name]);
 		}
 	}
 
